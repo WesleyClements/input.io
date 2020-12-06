@@ -1,0 +1,29 @@
+{
+  "name": "input.io",
+  "version": "0.0.1",
+  "description": "A flexible input utility library for the browser.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WesleyClements/input.io.git"
+  },
+  "keywords": [],
+  "author": "Wesley Clements <wesley.clements@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/WesleyClements/input.io/issues"
+  },
+  "homepage": "https://github.com/WesleyClements/input.io#readme",
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^8.0.0",
+    "eslint": "^7.15.0",
+    "prettier": "^2.2.1",
+    "prettier-eslint": "^12.0.0",
+    "rollup": "^2.34.2",
+    "tslib": "^1.14.1",
+    "typescript": "^4.1.2"
+  }
+}
