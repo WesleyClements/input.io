@@ -1,6 +1,40 @@
 import { isStringArray } from "./util";
 
 /**
+ * Represents a mapping between an action and some inputs.
+ */
+class InputMapping {
+  /** @type {String} */
+  #action;
+  /** @type {Set<String>} */
+  #keys;
+  /** @type {Set<String>} */
+  #mouseButtons;
+
+  /**
+   *
+   * @param {String} action - The name of this action
+   * @param {Set<String>} [keys] - The set of key codes associated with this action
+   * @param {Set<String>} [mouseButtons] - The set of mouse buttons codes associated with this action
+   */
+  constructor(action, keys, mouseButtons) {
+    this.#action = action;
+    this.#keys = new Set(keys);
+    this.#mouseButtons = new Set(mouseButtons);
+  }
+
+  get action() {
+    return this.#action;
+  }
+  get keys() {
+    return this.#keys;
+  }
+  get mouseButtons() {
+    return this.#mouseButtons;
+  }
+}
+
+/**
  * Manages all action to
  */
 class InputMap {
@@ -26,18 +60,54 @@ class InputMap {
   }
 
   /**
-   * A set of the names of all actions with mappings
+   * A Set of all actions with mappings
    */
   get actions() {
     return new Set(this.#actions);
   }
 
   /**
-   * Checks to see if this InputMap has a mapping for the given action
+   * Returns true if this InputMap has a mapping for the given action.
    * @param {String} action - The action of interest
    */
   has(action) {
     return this.#actions.has(action);
+  }
+
+  /**
+   * Returns the mapping for the given action if it exists.
+   * @param {String} action - The action of interest
+   * @returns {InputMapping | null}
+   */
+  getMapping(action) {
+    if (!this.#actions.has(action)) return null;
+    return new InputMapping(
+      action,
+      this.#actionToKeys.get(action),
+      this.#actionToMouseButtons.get(action)
+    );
+  }
+
+  /**
+   * Returns the actions which are mapped to the given inputs if any.
+   * @param {Object} inputs
+   * @param {String[]} [inputs.keys]
+   * @param {String[]} [inputs.mouseButtons]
+   * @returns {Set<String>|null}
+   */
+  getActions({ keys, mouseButtons }) {
+    if (!isStringArray(keys) && !isStringArray(mouseButtons))
+      throw new Error("at least one input must be provided");
+    const results = new Set();
+    keys?.forEach((key) =>
+      this.#keyToActions.get(key)?.forEach((action) => results.add(action))
+    );
+    mouseButtons?.forEach((mouseButton) =>
+      this.#mouseButtonToActions
+        .get(mouseButton)
+        ?.forEach((action) => results.add(action))
+    );
+    return results;
   }
 
   /**
@@ -48,8 +118,8 @@ class InputMap {
    * @param {String[]} [mappings[].mouseButtons] - All mouse buttons associated with this action
    */
   add(...mappings) {
-    mappings?.forEach((mapping) => {
-      try {
+    mappings
+      ?.map((mapping) => {
         if (typeof mapping !== "object")
           throw new TypeError("mapping is not an object");
         const { action, keys, mouseButtons } = mapping;
@@ -75,7 +145,9 @@ class InputMap {
               throw new Error(`no such mouse button '${mouseButtons[i]}'`);
             return buttonCode;
           });
-
+        return { action, keyCodes, mouseButtonCodes };
+      })
+      .forEach(({ action, keyCodes, mouseButtonCodes }) => {
         this.#actions.add(action);
         keyCodes?.forEach((keyCode) => {
           if (!this.#keyToActions.get(keyCode)?.add(action))
@@ -89,10 +161,7 @@ class InputMap {
           if (!this.#actionToMouseButtons.get(action)?.add(buttonCode))
             this.#actionToMouseButtons.set(action, new Set([buttonCode]));
         });
-      } catch (err) {
-        console.error(err);
-      }
-    });
+      });
   }
 
   /**
@@ -100,6 +169,8 @@ class InputMap {
    * @param  {String[]} actions - Actions to be removed
    */
   remove(...actions) {
+    if (!isStringArray(actions))
+      throw new TypeError("actions must be a string[]");
     actions.forEach((action) => {
       if (!this.#actions.delete(action)) return;
       this.#actionToKeys
