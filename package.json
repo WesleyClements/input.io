@@ -4,7 +4,9 @@
   "description": "A flexible input utility library for the browser.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prebuild": "npm run build:types",
+    "build": "npx rollup --config",
+    "build:types": "npx tsc"
   },
   "repository": {
     "type": "git",
@@ -18,7 +20,6 @@
   },
   "homepage": "https://github.com/WesleyClements/input.io#readme",
   "devDependencies": {
-    "@rollup/plugin-typescript": "^8.0.0",
     "eslint": "^7.15.0",
     "prettier": "^2.2.1",
     "prettier-eslint": "^12.0.0",
