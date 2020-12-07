@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/WesleyClements/input.io#readme",
   "devDependencies": {
+    "@rollup/plugin-babel": "^5.2.2",
     "eslint": "^7.15.0",
     "prettier": "^2.2.1",
     "prettier-eslint": "^12.0.0",
