@@ -1,3 +1,4 @@
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 import { babel } from "@rollup/plugin-babel";
 import { terser } from "rollup-plugin-terser";
 export default {
@@ -9,5 +10,5 @@ export default {
     sourcemap: true,
     compact: true,
   },
-  plugins: [terser(), babel({ babelHelpers: "bundled" })],
+  plugins: [terser(), babel({ babelHelpers: "bundled" }), nodeResolve()],
 };
