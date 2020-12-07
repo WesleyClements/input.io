@@ -5,3 +5,5 @@
  */
 export const isStringArray = (value) =>
   Array.isArray(value) && value.every((str) => typeof str === "string");
+
+export { default as Keys } from "./Keys";
