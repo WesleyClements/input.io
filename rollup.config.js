@@ -3,7 +3,7 @@ import { terser } from "rollup-plugin-terser";
 export default {
   input: "src/index.js",
   output: {
-    dir: "./dist/",
+    file: "./dist/index.js",
     format: "iife",
     name: "InputIO",
     sourcemap: true,
