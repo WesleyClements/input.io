@@ -1,4 +1,4 @@
-import { isStringArray } from "./util";
+import { isStringArray, Keys, MouseButtons } from "./util";
 
 /**
  * Represents a mapping between an action and some inputs.
@@ -132,19 +132,20 @@ class InputMap {
         if (!(keys?.length || mouseButtons?.length))
           throw new Error(`at least one input must be provided: ${action}`);
 
-        const keyCodes = keys
-          // ?.map((key) => Keys.code(key.toLowerCase()) ?? "")
-          ?.filter((keyCode, i) => {
-            if (!keyCode) throw new Error(`no such key '${keys[i]}'`);
-            return keyCode;
-          });
+        const keyCodes = keys?.reduce((flattened, key, i) => {
+          const codes = Keys.getCodes(key.toLowerCase());
+          if (codes.length === 0) throw new Error(`no such key '${keys[i]}'`);
+          flattened.push(...codes);
+          return flattened;
+        }, Array());
         const mouseButtonCodes = mouseButtons
-          //?.map((button) => MouseButtons.code(button.toLowerCase()) ?? "")
-          ?.filter((buttonCode, i) => {
-            if (!buttonCode)
+          ?.map((button) => MouseButtons.getCodes(button.toLowerCase()))
+          .reduce((flattened, mouseButtons, i) => {
+            if (!mouseButtons.length)
               throw new Error(`no such mouse button '${mouseButtons[i]}'`);
-            return buttonCode;
-          });
+            flattened.push(...mouseButtons);
+            return flattened;
+          }, []);
         return { action, keyCodes, mouseButtonCodes };
       })
       .forEach(({ action, keyCodes, mouseButtonCodes }) => {
