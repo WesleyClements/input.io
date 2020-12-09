@@ -1,52 +1,26 @@
 import { isStringArray, Keys, MouseButtons } from "./util";
 
 /**
- * Represents a mapping between an action and some inputs.
+ * @typedef InputMapping
+ * @type {Object}
+ * @property {string} action
+ * @property {string[]} [keys]
+ * @property {string[]} [mouseButtons]
  */
-class InputMapping {
-  /** @type {String} */
-  #action;
-  /** @type {Set<String>} */
-  #keys;
-  /** @type {Set<Number>} */
-  #mouseButtons;
-
-  /**
-   *
-   * @param {String} action - The name of this action
-   * @param {Set<String>} [keys] - The set of key codes associated with this action
-   * @param {Set<Number>} [mouseButtons] - The set of mouse buttons codes associated with this action
-   */
-  constructor(action, keys, mouseButtons) {
-    this.#action = action;
-    this.#keys = new Set(keys);
-    this.#mouseButtons = new Set(mouseButtons);
-  }
-
-  get action() {
-    return this.#action;
-  }
-  get keys() {
-    return this.#keys;
-  }
-  get mouseButtons() {
-    return this.#mouseButtons;
-  }
-}
 
 /**
  * Manages all action to
  */
 class InputMap {
-  /** @type {Set<String>} */
+  /** @type {Set<string>} */
   #actions;
-  /** @type {Map<String,Set<String>>} */
+  /** @type {Map<string,Set<string>>} */
   #actionToKeys;
-  /** @type {Map<String,Set<Number>>} */
+  /** @type {Map<string,Set<number>>} */
   #actionToMouseButtons;
-  /** @type {Map<String,Set<String>>} */
+  /** @type {Map<string,Set<string>>} */
   #keyToActions;
-  /** @type {Map<Number,Set<String>>} */
+  /** @type {Map<number,Set<string>>} */
   #mouseButtonToActions;
 
   /**
@@ -68,7 +42,7 @@ class InputMap {
 
   /**
    * Returns true if this InputMap has a mapping for the given action.
-   * @param {String} action - The action of interest
+   * @param {string} action - The action of interest
    */
   has(action) {
     return this.#actions.has(action);
@@ -76,24 +50,34 @@ class InputMap {
 
   /**
    * Returns the mapping for the given action if it exists.
-   * @param {String} action - The action of interest
+   * @param {string} action - The action of interest
    * @returns {InputMapping | null}
    */
   getMapping(action) {
     if (!this.#actions.has(action)) return null;
-    return new InputMapping(
+    /** @type {InputMapping} */
+    const result = {
       action,
-      this.#actionToKeys.get(action),
-      this.#actionToMouseButtons.get(action)
-    );
+    };
+    if (this.#actionToKeys.has(action)) {
+      result.keys = Array.from(this.#actionToKeys.get(action) ?? []).map(
+        (code) => Keys.getKeys(code)[0]
+      );
+    }
+    if (this.#actionToMouseButtons.has(action)) {
+      result.mouseButtons = Array.from(
+        this.#actionToMouseButtons.get(action) ?? []
+      ).map((code) => MouseButtons.getButtons(code)[0]);
+    }
+    return result;
   }
 
   /**
    * Returns the actions which are mapped to the given inputs if any.
    * @param {Object} inputs
-   * @param {String[]} [inputs.keys]
-   * @param {String[]} [inputs.mouseButtons]
-   * @returns {Set<String>|null}
+   * @param {string[]} [inputs.keys]
+   * @param {string[]} [inputs.mouseButtons]
+   * @returns {Set<string>|null}
    */
   getActions({ keys, mouseButtons }) {
     if (!(keys == null || isStringArray(keys)))
@@ -102,23 +86,20 @@ class InputMap {
       throw new TypeError(`mouseButtons must be a string[]`);
     if (!(keys?.length || mouseButtons?.length))
       throw new Error(`at least one input must be provided`);
-    return this.__getActions({
-      keyCodes: keys ? Keys.getAllCodes(...keys) : undefined,
-      mouseButtonCodes: mouseButtons
-        ? MouseButtons.getAllCodes(...mouseButtons)
-        : undefined,
-    });
+    return this.__getActions(
+      keys ? Keys.getAllCodes(...keys) : undefined,
+      mouseButtons ? MouseButtons.getAllCodes(...mouseButtons) : undefined
+    );
   }
 
   /**
-   * @ignore
+   * @private
    * Returns the actions which are mapped to the given raw inputs if any.
-   * @param {Object} inputs
-   * @param {String[]} [inputs.keyCodes]
-   * @param {Number[]} [inputs.mouseButtonCodes]
+   * @param {string[]} [keyCodes]
+   * @param {number[]} [mouseButtonCodes]
    * @returns {Set<String>}
    */
-  __getActions({ keyCodes, mouseButtonCodes }) {
+  __getActions(keyCodes, mouseButtonCodes) {
     const results = new Set();
     keyCodes?.forEach((key) =>
       this.#keyToActions.get(key)?.forEach((action) => results.add(action))
@@ -133,10 +114,7 @@ class InputMap {
 
   /**
    * Adds all provided action to input mappings provided. Appends to input mappings if they exist.
-   * @param {Object[]} mappings - The action mappings to add
-   * @param {String} mappings[].action - The action name
-   * @param {String[]} [mappings[].keys] - All keys associated with this action
-   * @param {String[]} [mappings[].mouseButtons] - All mouse buttons associated with this action
+   * @param {...InputMapping} mappings - The input mappings to add
    */
   add(...mappings) {
     mappings
@@ -179,7 +157,7 @@ class InputMap {
 
   /**
    * Removes all action input mappings for the given actions, if they exist.
-   * @param  {String[]} actions - Actions to be removed
+   * @param  {string[]} actions - Actions to be removed
    */
   remove(...actions) {
     if (!isStringArray(actions))
@@ -201,10 +179,7 @@ class InputMap {
 
   /**
    * Sets all provided action to input mappings provided. Overwrites input mappings if they exist.
-   * @param {Object[]} mappings - The action mappings to add
-   * @param {String} mappings[].action - The action name
-   * @param {String[]} [mappings[].keys] - All keys associated with this action
-   * @param {String[]} [mappings[].mouseButtons] - All mouse buttons associated with this action
+   * @param {...InputMapping} mappings - The action mappings to add
    */
   set(...mappings) {
     this.remove(...mappings.map(({ action }) => action));
