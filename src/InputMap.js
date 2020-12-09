@@ -23,7 +23,7 @@ class InputMap {
        * @param {number[]} [mouseButtonCodes]
        * @returns {Set<String>}
        */
-      __getActions(keyCodes, mouseButtonCodes) {
+      getActions(keyCodes, mouseButtonCodes) {
         const results = new Set();
         keyCodes?.forEach((key) =>
           InputMap.prototype.#keyToActions
@@ -43,7 +43,7 @@ class InputMap {
        * @param {string} keyCode
        * @returns {boolean}
        */
-      __keyHasAction(keyCode) {
+      keyHasAction(keyCode) {
         return !!InputMap.prototype.#keyToActions.get(keyCode)?.size;
       },
 
@@ -52,7 +52,7 @@ class InputMap {
        * @param {number} buttonCode
        * @returns {boolean}
        */
-      __buttonHasAction(buttonCode) {
+      buttonHasAction(buttonCode) {
         return !!InputMap.prototype.#mouseButtonToActions.get(buttonCode)?.size;
       },
     };
@@ -133,7 +133,7 @@ class InputMap {
     if (!(keys?.length || mouseButtons?.length))
       throw new Error(`at least one input must be provided`);
     // @ts-ignore
-    return this.__internal.__getActions(
+    return this.__internal.getActions(
       keys ? Keys.getAllCodes(...keys) : undefined,
       mouseButtons ? MouseButtons.getAllCodes(...mouseButtons) : undefined
     );
