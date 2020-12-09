@@ -113,8 +113,8 @@ class InputMap {
   }
 
   /**
-   * @access package
-   * Returns the actions which are mapped to the given raw inputs if any.
+   * @private
+   * Checks if there is an action mapped to the raw key
    * @param {string} keyCode
    * @returns {boolean}
    */
@@ -123,8 +123,8 @@ class InputMap {
   }
 
   /**
-   * @access package
-   * Returns the actions which are mapped to the given raw inputs if any.
+   * @private
+   * Checks if there is an action mapped to the raw mouse button
    * @param {number} buttonCode
    * @returns {boolean}
    */
