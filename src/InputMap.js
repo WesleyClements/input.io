@@ -113,6 +113,26 @@ class InputMap {
   }
 
   /**
+   * @access package
+   * Returns the actions which are mapped to the given raw inputs if any.
+   * @param {string} keyCode
+   * @returns {boolean}
+   */
+  __keyHasAction(keyCode) {
+    return !!this.#keyToActions.get(keyCode)?.size;
+  }
+
+  /**
+   * @access package
+   * Returns the actions which are mapped to the given raw inputs if any.
+   * @param {number} buttonCode
+   * @returns {boolean}
+   */
+  __buttonHasAction(buttonCode) {
+    return !!this.#mouseButtonToActions.get(buttonCode)?.size;
+  }
+
+  /**
    * Adds all provided action to input mappings provided. Appends to input mappings if they exist.
    * @param {...InputMapping} mappings - The input mappings to add
    */
