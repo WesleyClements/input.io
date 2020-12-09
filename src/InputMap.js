@@ -96,14 +96,31 @@ class InputMap {
    * @returns {Set<String>|null}
    */
   getActions({ keys, mouseButtons }) {
-    if (!isStringArray(keys) && !isStringArray(mouseButtons))
-      throw new Error("at least one input must be provided");
+    if (!(keys == null || isStringArray(keys)))
+      throw new TypeError(`keys must be a string[]`);
+    if (!(mouseButtons == null || isStringArray(mouseButtons)))
+      throw new TypeError(`mouseButtons must be a string[]`);
+    if (!(keys?.length || mouseButtons?.length))
+      throw new Error(`at least one input must be provided`);
+    return this.__getActions({
+      keyCodes: keys ? Keys.getAllCodes(...keys) : undefined,
+      mouseButtonCodes: mouseButtons
+        ? MouseButtons.getAllCodes(...mouseButtons)
+        : undefined,
+    });
+  }
+
+  /**
+   * @ignore
+   * Returns the actions which are mapped to the given raw inputs if any.
+   * @param {Object} inputs
+   * @param {String[]} [inputs.keyCodes]
+   * @param {Number[]} [inputs.mouseButtonCodes]
+   * @returns {Set<String>}
+   */
+  __getActions({ keyCodes, mouseButtonCodes }) {
     const results = new Set();
-    const keycodes = keys ? Keys.getAllCodes(...keys) : undefined;
-    const mouseButtonCodes = mouseButtons
-      ? MouseButtons.getAllCodes(...mouseButtons)
-      : undefined;
-    keycodes?.forEach((key) =>
+    keyCodes?.forEach((key) =>
       this.#keyToActions.get(key)?.forEach((action) => results.add(action))
     );
     mouseButtonCodes?.forEach((mouseButton) =>
