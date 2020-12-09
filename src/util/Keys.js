@@ -101,4 +101,17 @@ export default {
     const codes = keyToCodes.get(key);
     return codes ? Array.from(codes) : [];
   },
+  /**
+   * Returns the codes associated with all given keys
+   * @param {String[]} keys
+   * @returns {String[]}
+   */
+  getAllCodes(...keys) {
+    return keys.reduce((flattened, key, i) => {
+      const codes = this.getCodes(key.toLowerCase());
+      if (codes.length === 0) throw new Error(`no such key '${keys[i]}'`);
+      flattened.push(...codes);
+      return flattened;
+    }, Array());
+  },
 };

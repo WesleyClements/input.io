@@ -8,14 +8,14 @@ class InputMapping {
   #action;
   /** @type {Set<String>} */
   #keys;
-  /** @type {Set<String>} */
+  /** @type {Set<Number>} */
   #mouseButtons;
 
   /**
    *
    * @param {String} action - The name of this action
    * @param {Set<String>} [keys] - The set of key codes associated with this action
-   * @param {Set<String>} [mouseButtons] - The set of mouse buttons codes associated with this action
+   * @param {Set<Number>} [mouseButtons] - The set of mouse buttons codes associated with this action
    */
   constructor(action, keys, mouseButtons) {
     this.#action = action;
@@ -42,11 +42,11 @@ class InputMap {
   #actions;
   /** @type {Map<String,Set<String>>} */
   #actionToKeys;
-  /** @type {Map<String,Set<String>>} */
+  /** @type {Map<String,Set<Number>>} */
   #actionToMouseButtons;
   /** @type {Map<String,Set<String>>} */
   #keyToActions;
-  /** @type {Map<String,Set<String>>} */
+  /** @type {Map<Number,Set<String>>} */
   #mouseButtonToActions;
 
   /**
@@ -99,10 +99,14 @@ class InputMap {
     if (!isStringArray(keys) && !isStringArray(mouseButtons))
       throw new Error("at least one input must be provided");
     const results = new Set();
-    keys?.forEach((key) =>
+    const keycodes = keys ? Keys.getAllCodes(...keys) : undefined;
+    const mouseButtonCodes = mouseButtons
+      ? MouseButtons.getAllCodes(...mouseButtons)
+      : undefined;
+    keycodes?.forEach((key) =>
       this.#keyToActions.get(key)?.forEach((action) => results.add(action))
     );
-    mouseButtons?.forEach((mouseButton) =>
+    mouseButtonCodes?.forEach((mouseButton) =>
       this.#mouseButtonToActions
         .get(mouseButton)
         ?.forEach((action) => results.add(action))
@@ -131,22 +135,13 @@ class InputMap {
           throw new TypeError(`mouseButtons must be a string[]`);
         if (!(keys?.length || mouseButtons?.length))
           throw new Error(`at least one input must be provided: ${action}`);
-
-        const keyCodes = keys?.reduce((flattened, key, i) => {
-          const codes = Keys.getCodes(key.toLowerCase());
-          if (codes.length === 0) throw new Error(`no such key '${keys[i]}'`);
-          flattened.push(...codes);
-          return flattened;
-        }, Array());
-        const mouseButtonCodes = mouseButtons
-          ?.map((button) => MouseButtons.getCodes(button.toLowerCase()))
-          .reduce((flattened, mouseButtons, i) => {
-            if (!mouseButtons.length)
-              throw new Error(`no such mouse button '${mouseButtons[i]}'`);
-            flattened.push(...mouseButtons);
-            return flattened;
-          }, []);
-        return { action, keyCodes, mouseButtonCodes };
+        return {
+          action,
+          keyCodes: keys ? Keys.getAllCodes(...keys) : undefined,
+          mouseButtonCodes: mouseButtons
+            ? MouseButtons.getAllCodes(...mouseButtons)
+            : undefined,
+        };
       })
       .forEach(({ action, keyCodes, mouseButtonCodes }) => {
         this.#actions.add(action);

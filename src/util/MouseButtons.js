@@ -46,4 +46,18 @@ export default {
     const codes = buttonToCodes.get(button);
     return codes ? Array.from(codes) : [];
   },
+  /**
+   * Returns the codes associated with all given buttons
+   * @param {String[]} buttons
+   * @returns {Number[]}
+   */
+  getAllCodes(...buttons) {
+    return buttons.reduce((flattened, button, i) => {
+      const codes = this.getCodes(button.toLowerCase());
+      if (codes.length === 0)
+        throw new Error(`no such mouse button '${buttons[i]}'`);
+      flattened.push(...codes);
+      return flattened;
+    }, Array());
+  },
 };
