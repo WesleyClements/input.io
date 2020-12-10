@@ -165,16 +165,20 @@ class InputMap {
       .forEach(({ action, keyCodes, mouseButtonCodes }) => {
         this.#actions.add(action);
         keyCodes?.forEach((keyCode) => {
-          if (!this.#keyToActions.get(keyCode)?.add(action))
+          if (!this.#keyToActions.has(keyCode))
             this.#keyToActions.set(keyCode, new Set([action]));
-          if (!this.#actionToKeys.get(action)?.add(keyCode))
-            this.#actionToKeys.set(keyCode, new Set([keyCode]));
+          else this.#keyToActions.get(keyCode)?.add(action);
+          if (!this.#actionToKeys.has(action))
+            this.#actionToKeys.set(action, new Set([keyCode]));
+          else this.#actionToKeys.get(action)?.add(keyCode);
         });
         mouseButtonCodes?.forEach((buttonCode) => {
-          if (!this.#mouseButtonToActions.get(buttonCode)?.add(action))
+          if (!this.#mouseButtonToActions.has(buttonCode))
             this.#mouseButtonToActions.set(buttonCode, new Set([action]));
-          if (!this.#actionToMouseButtons.get(action)?.add(buttonCode))
+          else this.#mouseButtonToActions.get(buttonCode)?.add(action);
+          if (!this.#actionToMouseButtons.has(action))
             this.#actionToMouseButtons.set(action, new Set([buttonCode]));
+          else this.#actionToMouseButtons.get(action)?.add(buttonCode);
         });
       });
   }
