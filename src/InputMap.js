@@ -85,10 +85,6 @@ class InputMap {
    * @returns {Set<string>|null}
    */
   getActions({ keys, mouseButtons }) {
-    if (!(keys == null || isStringArray(keys)))
-      throw new TypeError(`keys must be a string[]`);
-    if (!(mouseButtons == null || isStringArray(mouseButtons)))
-      throw new TypeError(`mouseButtons must be a string[]`);
     if (!(keys?.length || mouseButtons?.length))
       throw new Error(`at least one input must be provided`);
     return this[getActions](
@@ -142,20 +138,19 @@ class InputMap {
    */
   add(...mappings) {
     mappings
+      ?.filter((mapping) => mapping != null)
       ?.map((mapping) => {
         if (typeof mapping !== "object")
           throw new TypeError("mapping is not an object");
         const { action, keys, mouseButtons } = mapping;
-        if (typeof action !== "string")
-          throw new TypeError(`action must be a string`);
-        if (!(keys == null || isStringArray(keys)))
-          throw new TypeError(`keys must be a string[]`);
-        if (!(mouseButtons == null || isStringArray(mouseButtons)))
-          throw new TypeError(`mouseButtons must be a string[]`);
-        if (!(keys?.length || mouseButtons?.length))
+        if (action == null) throw new TypeError("action must be defined");
+        if (
+          !(Array.isArray(keys) && keys?.length) &&
+          !(Array.isArray(mouseButtons) && mouseButtons?.length)
+        )
           throw new Error(`at least one input must be provided: ${action}`);
         return {
-          action,
+          action: action.toString(),
           keyCodes: keys ? Keys.getAllCodes(...keys) : undefined,
           mouseButtonCodes: mouseButtons
             ? MouseButtons.getAllCodes(...mouseButtons)
