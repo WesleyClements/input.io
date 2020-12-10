@@ -183,8 +183,6 @@ class InputMap {
    * @param  {string[]} actions - Actions to be removed
    */
   remove(...actions) {
-    if (!isStringArray(actions))
-      throw new TypeError("actions must be a string[]");
     actions.forEach((action) => {
       if (!this.#actions.delete(action)) return;
       this.#actionToKeys
