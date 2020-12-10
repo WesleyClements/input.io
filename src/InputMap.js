@@ -8,56 +8,15 @@ import { isStringArray, Keys, MouseButtons } from "./util";
  * @property {string[]} [mouseButtons]
  */
 
+/** @ignore */
+export const getActions = Symbol("InputMap.getActions");
+export const keyHasAction = Symbol("InputMap.keyHasAction");
+export const buttonHasAction = Symbol("InputMap.buttonHasAction");
+
 /**
  * Manages all action to input mapping
  */
 class InputMap {
-  // @ts-ignore
-  static _ = (() => {
-    // @ts-ignore
-    InputMap.prototype.__internal = {
-      /**
-       *
-       * Returns the actions which are mapped to the given raw inputs if any.
-       * @param {string[]} [keyCodes]
-       * @param {number[]} [mouseButtonCodes]
-       * @returns {Set<String>}
-       */
-      getActions(keyCodes, mouseButtonCodes) {
-        const results = new Set();
-        keyCodes?.forEach((key) =>
-          InputMap.prototype.#keyToActions
-            .get(key)
-            ?.forEach((action) => results.add(action))
-        );
-        mouseButtonCodes?.forEach((mouseButton) =>
-          InputMap.prototype.#mouseButtonToActions
-            .get(mouseButton)
-            ?.forEach((action) => results.add(action))
-        );
-        return results;
-      },
-
-      /**
-       * Checks if there is an action mapped to the raw key
-       * @param {string} keyCode
-       * @returns {boolean}
-       */
-      keyHasAction(keyCode) {
-        return !!InputMap.prototype.#keyToActions.get(keyCode)?.size;
-      },
-
-      /**
-       * Checks if there is an action mapped to the raw mouse button
-       * @param {number} buttonCode
-       * @returns {boolean}
-       */
-      buttonHasAction(buttonCode) {
-        return !!InputMap.prototype.#mouseButtonToActions.get(buttonCode)?.size;
-      },
-    };
-  })();
-
   /** @type {Set<string>} */
   #actions;
   /** @type {Map<string,Set<string>>} */
@@ -132,11 +91,49 @@ class InputMap {
       throw new TypeError(`mouseButtons must be a string[]`);
     if (!(keys?.length || mouseButtons?.length))
       throw new Error(`at least one input must be provided`);
-    // @ts-ignore
-    return this.__internal.getActions(
+    return this[getActions](
       keys ? Keys.getAllCodes(...keys) : undefined,
       mouseButtons ? MouseButtons.getAllCodes(...mouseButtons) : undefined
     );
+  }
+  /**
+   *
+   * Returns the actions which are mapped to the given raw inputs if any.
+   * @param {string[]} [keyCodes]
+   * @param {number[]} [mouseButtonCodes]
+   * @returns {Set<String>}
+   */
+  [getActions](keyCodes, mouseButtonCodes) {
+    const results = new Set();
+    keyCodes?.forEach((key) =>
+      InputMap.prototype.#keyToActions
+        .get(key)
+        ?.forEach((action) => results.add(action))
+    );
+    mouseButtonCodes?.forEach((mouseButton) =>
+      InputMap.prototype.#mouseButtonToActions
+        .get(mouseButton)
+        ?.forEach((action) => results.add(action))
+    );
+    return results;
+  }
+
+  /**
+   * Checks if there is an action mapped to the raw key
+   * @param {string} keyCode
+   * @returns {boolean}
+   */
+  [keyHasAction](keyCode) {
+    return !!InputMap.prototype.#keyToActions.get(keyCode)?.size;
+  }
+
+  /**
+   * Checks if there is an action mapped to the raw mouse button
+   * @param {number} buttonCode
+   * @returns {boolean}
+   */
+  [buttonHasAction](buttonCode) {
+    return !!InputMap.prototype.#mouseButtonToActions.get(buttonCode)?.size;
   }
 
   /**
