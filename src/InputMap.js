@@ -1,4 +1,4 @@
-import { isStringArray, Keys, MouseButtons } from "./util";
+import { Keys, MouseButtons } from "./util";
 
 /**
  * @typedef InputMapping
