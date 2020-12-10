@@ -4,7 +4,7 @@ describe("InputMap", () => {
     expect(new InputMap()).toBeInstanceOf(InputMap);
   });
 
-  describe("this.add", () => {
+  describe("this.add()", () => {
     it("throws a TypeError if any argument is not an object", () => {
       const map = new InputMap();
       expect(() => map.add("hey")).toThrow(TypeError);
@@ -82,11 +82,12 @@ describe("InputMap", () => {
       expect.arrayContaining(mapping.mouseButtons)
     );
   });
-
-  it("removing a mapping action should not be included in the actions property", () => {
-    const map = new InputMap();
-    map.add({ action: "up", keys: ["w", "up"] });
-    map.remove("up");
-    expect(map.actions.has("up")).toBe(false);
+  describe("this.remove()", () => {
+    it("removing a mapping action should not be included in the actions property", () => {
+      const map = new InputMap();
+      map.add({ action: "up", keys: ["w", "up"] });
+      map.remove("up");
+      expect(map.actions.has("up")).toBe(false);
+    });
   });
 });
