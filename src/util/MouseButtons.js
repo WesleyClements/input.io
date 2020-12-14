@@ -29,6 +29,13 @@ const buttonToCodes = [...codeToButtons].reduce(
 
 export default {
   /**
+   * Returns true if the argument represents a mouse button.
+   * @param {string} button
+   */
+  isButton(button) {
+    return buttonToCodes.has(button);
+  },
+  /**
    * Returns the buttons associated with a code
    * @param {Number} code
    * @returns {String[]}
@@ -53,10 +60,9 @@ export default {
    */
   getAllCodes(...buttons) {
     return buttons.reduce((flattened, button, i) => {
-      const codes = this.getCodes(button.toLowerCase());
-      if (codes.length === 0)
+      if (!this.isButton(button))
         throw new Error(`no such mouse button '${buttons[i]}'`);
-      flattened.push(...codes);
+      flattened.push(...this.getCodes(button.toLowerCase()));
       return flattened;
     }, Array());
   },

@@ -109,6 +109,13 @@ const keyToCodes = [...codeToKeys].reduce(
 
 export default {
   /**
+   * Returns true if the argument represents a key.
+   * @param {string} key
+   */
+  isKey(key) {
+    return keyToCodes.has(key);
+  },
+  /**
    * Returns the keys associated with a code
    * @param {String} code
    * @returns {String[]}
@@ -133,9 +140,8 @@ export default {
    */
   getAllCodes(...keys) {
     return keys.reduce((flattened, key, i) => {
-      const codes = this.getCodes(key.toLowerCase());
-      if (codes.length === 0) throw new Error(`no such key '${keys[i]}'`);
-      flattened.push(...codes);
+      if (!this.isKey(key)) throw new Error(`no such key '${keys[i]}'`);
+      flattened.push(...this.getCodes(key.toLowerCase()));
       return flattened;
     }, Array());
   },
