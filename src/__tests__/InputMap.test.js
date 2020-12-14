@@ -17,75 +17,45 @@ describe("InputMap", () => {
       expect(() => map.add({ action: null })).toThrow(TypeError);
     });
 
-    it("throws an Error in any mapping does not have any keys or mouseButtons", () => {
+    it("throws an Error in any mapping does not have any inputs", () => {
       const map = new InputMap();
       expect(() => map.add({ action: "up" })).toThrow(Error);
-      const valueGenerators = [() => undefined, () => null, () => []];
-      valueGenerators.forEach((generator) =>
+      [undefined, null, []].forEach((inputs) =>
         expect(() => {
-          map.add({ action: "up", keys: generator() });
+          map.add({ action: "up", inputs });
         }).toThrow(Error)
-      );
-      valueGenerators.forEach((generator) =>
-        expect(() => {
-          map.add({ action: "up", mouseButtons: generator() });
-        }).toThrow(Error)
-      );
-      valueGenerators.forEach((generator1) =>
-        valueGenerators.forEach((generator2) =>
-          expect(() => {
-            map.add({
-              action: "up",
-              keys: generator1(),
-              mouseButtons: generator2(),
-            });
-          }).toThrow(Error)
-        )
       );
     });
 
-    it("throws a TypeError if any mapping has an invalid key or mouseButton", () => {
+    it("adding a valid mapping adds it's action to this.actions", () => {
       const map = new InputMap();
-      expect(() => map.add({ action: "up", keys: [20] })).toThrow(TypeError);
-      expect(() => map.add({ action: "up", mouseButtons: [20] })).toThrow(
-        TypeError
-      );
-      expect(() =>
-        map.add({ action: "up", keys: [20], mouseButtons: [20] })
-      ).toThrow(TypeError);
+      const mapping = {
+        action: "up",
+        inputs: ["w", "up", "left button"],
+      };
+      map.add(mapping);
+      expect(map.actions.has(mapping.action)).toBe(true);
     });
-  });
 
-  it("adding a valid mapping adds it's action to this.actions", () => {
-    const map = new InputMap();
-    const mapping = {
-      action: "up",
-      keys: ["w", "up"],
-      mouseButtons: ["left"],
-    };
-    map.add(mapping);
-    expect(map.actions.has(mapping.action)).toBe(true);
-  });
-
-  it("adding a valid mapping adds is able to be retrieved with this.getMapping", () => {
-    const map = new InputMap();
-    const mapping = {
-      action: "up",
-      keys: ["w", "up"],
-      mouseButtons: ["left"],
-    };
-    map.add(mapping);
-    const result = map.getMapping(mapping.action);
-    expect(result).toHaveProperty("keys", expect.arrayContaining(mapping.keys));
-    expect(result).toHaveProperty(
-      "mouseButtons",
-      expect.arrayContaining(mapping.mouseButtons)
-    );
+    it("adding a valid mapping adds is able to be retrieved with this.getMapping", () => {
+      const map = new InputMap();
+      const mapping = {
+        action: "up",
+        inputs: ["w", "up", "left button"],
+      };
+      map.add(mapping);
+      const result = map.getMapping(mapping.action);
+      expect(result).toHaveProperty("action", mapping.action);
+      expect(result).toHaveProperty(
+        "inputs",
+        expect.arrayContaining(mapping.inputs)
+      );
+    });
   });
   describe("this.remove()", () => {
     it("removing a mapping action should not be included in the actions property", () => {
       const map = new InputMap();
-      map.add({ action: "up", keys: ["w", "up"] });
+      map.add({ action: "up", inputs: ["w", "up", "left button"] });
       map.remove("up");
       expect(map.actions.has("up")).toBe(false);
     });
