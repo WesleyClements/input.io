@@ -87,6 +87,7 @@ class InputHistory {
   /**
    *
    * @param {string} key
+   * @returns {BinaryInputHistory}
    */
   getKeyHistory(key) {
     let history = this.#keyInputHistories.get(key);
@@ -98,6 +99,7 @@ class InputHistory {
   /**
    *
    * @param {string} key
+   * @returns {BinaryInputHistory}
    */
   getMouseButtonHistory(key) {
     let history = this.#mouseButtonInputHistories.get(key);
@@ -112,6 +114,7 @@ class InputHistory {
   /**
    *
    * @param {string} key
+   * @returns {ActionInputHistory}
    */
   getActionHistory(key) {
     let history = this.#actionInputHistories.get(key);
