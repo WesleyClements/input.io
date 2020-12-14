@@ -77,17 +77,16 @@ class InputMap {
 
   /**
    * Returns the actions which are mapped to the given inputs if any.
-   * @param {Object} inputs
-   * @param {string[]} [inputs.keys]
-   * @param {string[]} [inputs.mouseButtons]
-   * @returns {Set<string>|null}
+   * @param {...string} inputs
+   * @returns {Set<string>}
    */
-  getActions({ keys, mouseButtons }) {
-    if (!(keys?.length || mouseButtons?.length))
-      throw new Error(`at least one input must be provided`);
+  getActions(...inputs) {
+    if (!inputs?.length) return new Set();
     return this[getActions](
-      keys ? Keys.getAllCodes(...keys) : undefined,
-      mouseButtons ? MouseButtons.getAllCodes(...mouseButtons) : undefined
+      Keys.getAllCodes(...inputs.filter((input) => Keys.isKey(input))),
+      MouseButtons.getAllCodes(
+        ...inputs.filter((input) => MouseButtons.isButton(input))
+      )
     );
   }
   /**
