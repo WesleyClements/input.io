@@ -34,8 +34,8 @@ class InputIO {
     this.#target =
       (typeof target === "string" ? document.querySelector(target) : target) ??
       null;
-    this.#preventDefault = preventDefault ?? "action";
-    this.#inputMap = inputMap ?? new InputMap();
+    this.preventDefault = preventDefault ?? "action";
+    this.inputMap = inputMap ?? new InputMap();
     {
       /** @type {*} */
       const state = {};
