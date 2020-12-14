@@ -4,8 +4,7 @@ import { Keys, MouseButtons } from "./util";
  * @typedef InputMapping
  * @type {Object}
  * @property {string} action
- * @property {string[]} [keys]
- * @property {string[]} [mouseButtons]
+ * @property {string[]} [inputs]
  */
 
 /** @ignore */
@@ -63,17 +62,16 @@ class InputMap {
     /** @type {InputMapping} */
     const result = {
       action,
+      inputs: [],
     };
-    if (this.#actionToKeys.has(action)) {
-      result.keys = Array.from(this.#actionToKeys.get(action) ?? []).map(
-        (code) => Keys.getKeys(code)[0]
+    this.#actionToKeys
+      .get(action)
+      ?.forEach((code) => result.inputs?.push(Keys.getKeys(code)[0]));
+    this.#actionToMouseButtons
+      .get(action)
+      ?.forEach((code) =>
+        result.inputs?.push(MouseButtons.getButtons(code)[0])
       );
-    }
-    if (this.#actionToMouseButtons.has(action)) {
-      result.mouseButtons = Array.from(
-        this.#actionToMouseButtons.get(action) ?? []
-      ).map((code) => MouseButtons.getButtons(code)[0]);
-    }
     return result;
   }
 
@@ -142,24 +140,30 @@ class InputMap {
       ?.map((mapping) => {
         if (typeof mapping !== "object")
           throw new TypeError("mapping is not an object");
-        const { action, keys, mouseButtons } = mapping;
+        const { action, inputs } = mapping;
         if (action == null) throw new TypeError("action must be defined");
-        if (
-          !(Array.isArray(keys) && keys?.length) &&
-          !(Array.isArray(mouseButtons) && mouseButtons?.length)
-        )
+        if (!(Array.isArray(inputs) && inputs?.length))
           throw new Error(`at least one input must be provided: ${action}`);
+        const invalidInputs = inputs.filter(
+          (input) => !Keys.isKey(input) && !MouseButtons.isButton(input)
+        );
+        console.warn(
+          "Some inputs are invalid and being ignored",
+          invalidInputs
+        );
         return {
           action: action.toString(),
-          keyCodes: keys ? Keys.getAllCodes(...keys) : undefined,
-          mouseButtonCodes: mouseButtons
-            ? MouseButtons.getAllCodes(...mouseButtons)
-            : undefined,
+          keyCodes: Keys.getAllCodes(
+            ...inputs.filter((input) => Keys.isKey(input))
+          ),
+          mouseButtonCodes: MouseButtons.getAllCodes(
+            ...inputs.filter((input) => MouseButtons.isButton(input))
+          ),
         };
       })
       .forEach(({ action, keyCodes, mouseButtonCodes }) => {
         this.#actions.add(action);
-        keyCodes?.forEach((keyCode) => {
+        keyCodes.forEach((keyCode) => {
           if (!this.#keyToActions.has(keyCode))
             this.#keyToActions.set(keyCode, new Set([action]));
           else this.#keyToActions.get(keyCode)?.add(action);
@@ -167,7 +171,7 @@ class InputMap {
             this.#actionToKeys.set(action, new Set([keyCode]));
           else this.#actionToKeys.get(action)?.add(keyCode);
         });
-        mouseButtonCodes?.forEach((buttonCode) => {
+        mouseButtonCodes.forEach((buttonCode) => {
           if (!this.#mouseButtonToActions.has(buttonCode))
             this.#mouseButtonToActions.set(buttonCode, new Set([action]));
           else this.#mouseButtonToActions.get(buttonCode)?.add(action);
