@@ -25,13 +25,15 @@ class InputIO {
 
   /**
    * @param {Object} [options={}] - InputIO options.
-   * @param {HTMLElement} [options.target] - Determines the {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement|HTMLElement} to listen for inputs on.
+   * @param {HTMLElement|string} [options.target] - An {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement|HTMLElement} or css selector to an HTMLElement to listen for inputs on.
    * @param {'all'|'action'|'none'} [options.preventDefault="action"] -
    * @param {InputMap} [options.inputMap] -
    * Determines which input events will have preventDefault called on them
    */
   constructor({ target, preventDefault, inputMap } = {}) {
-    this.#target = target ?? null;
+    this.#target =
+      (typeof target === "string" ? document.querySelector(target) : target) ??
+      null;
     this.#preventDefault = preventDefault ?? "action";
     this.#inputMap = inputMap ?? new InputMap();
     {
