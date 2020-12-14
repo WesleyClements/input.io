@@ -70,3 +70,41 @@ class ActionInputHistory extends BinaryInputHistory {
     super.update({ state: this.#activeInputs.size > 0 });
   }
 }
+
+class InputHistory {
+  /** @type {Map<string, BinaryInputHistory>} */
+  #keyInputHistories;
+  /** @type {Map<string, BinaryInputHistory>} */
+  #mouseButtonInputHistories;
+  /** @type {Map<string, ActionInputHistory>} */
+  #actionInputHistories;
+
+  constructor() {
+    this.#keyInputHistories = new Map();
+    this.#mouseButtonInputHistories = new Map();
+    this.#actionInputHistories = new Map();
+  }
+  /**
+   *
+   * @param {string} key
+   */
+  getKeyHistory(key) {
+    return this.#keyInputHistories.get(key);
+  }
+  /**
+   *
+   * @param {string} key
+   */
+  getMouseButtonHistory(key) {
+    return this.#mouseButtonInputHistories.get(key);
+  }
+  /**
+   *
+   * @param {string} key
+   */
+  getActionHistory(key) {
+    return this.#actionInputHistories.get(key);
+  }
+}
+
+export default InputHistory;
