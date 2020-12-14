@@ -1,7 +1,7 @@
 const codeToButtons = new Map([
-  [0, ["left", "button1"]],
-  [1, ["middle", "button2"]],
-  [2, ["right", "button3"]],
+  [0, ["left button", "button1"]],
+  [1, ["middle button", "button2"]],
+  [2, ["right button", "button3"]],
   [3, ["button4"]],
   [4, ["button5"]],
   [5, ["button6"]],
