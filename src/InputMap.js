@@ -147,10 +147,11 @@ class InputMap {
         const invalidInputs = inputs.filter(
           (input) => !Keys.isKey(input) && !MouseButtons.isButton(input)
         );
-        console.warn(
-          "Some inputs are invalid and being ignored",
-          invalidInputs
-        );
+        if (invalidInputs.length)
+          console.warn(
+            "Some inputs are invalid and being ignored",
+            invalidInputs
+          );
         return {
           action: action.toString(),
           keyCodes: Keys.getAllCodes(
