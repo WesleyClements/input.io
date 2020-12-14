@@ -98,14 +98,14 @@ class InputHistory {
   }
   /**
    *
-   * @param {string} key
+   * @param {string} button
    * @returns {BinaryInputHistory}
    */
-  getMouseButtonHistory(key) {
-    let history = this.#mouseButtonInputHistories.get(key);
+  getMouseButtonHistory(button) {
+    let history = this.#mouseButtonInputHistories.get(button);
     if (!history) {
       this.#mouseButtonInputHistories.set(
-        key,
+        button,
         (history = new BinaryInputHistory())
       );
     }
@@ -113,13 +113,16 @@ class InputHistory {
   }
   /**
    *
-   * @param {string} key
+   * @param {string} action
    * @returns {ActionInputHistory}
    */
-  getActionHistory(key) {
-    let history = this.#actionInputHistories.get(key);
+  getActionHistory(action) {
+    let history = this.#actionInputHistories.get(action);
     if (!history) {
-      this.#actionInputHistories.set(key, (history = new ActionInputHistory()));
+      this.#actionInputHistories.set(
+        action,
+        (history = new ActionInputHistory())
+      );
     }
     return history;
   }
