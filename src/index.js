@@ -4,6 +4,12 @@ if (typeof window === "undefined")
 import InputMap, { keyHasAction, buttonHasAction } from "./InputMap";
 
 /**
+ * @readonly
+ * @enum {string}
+ */
+const preventDefaultValues = new Set(["all", "action", "none"]);
+
+/**
  * Manages inputs
  * @property {typeof InputMap} InputMap
  */
@@ -12,7 +18,7 @@ class InputIO {
     return InputMap;
   }
 
-  /** @type {HTMLElement | null} */
+  /** @type {Element | null} */
   #target;
   /** @type {'all'|'action'|'none'} */
   #preventDefault;
@@ -25,17 +31,38 @@ class InputIO {
 
   /**
    * @param {Object} [options={}] - InputIO options.
-   * @param {HTMLElement|string} [options.target] - An {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement|HTMLElement} or css selector to an HTMLElement to listen for inputs on.
+   * @param {Element|string} [options.target] - An {@link https://developer.mozilla.org/en-US/docs/Web/API/Element|Element} or css selector to an Element to listen for inputs on.
    * @param {'all'|'action'|'none'} [options.preventDefault="action"] -
    * @param {InputMap} [options.inputMap] -
    * Determines which input events will have preventDefault called on them
    */
   constructor({ target, preventDefault, inputMap } = {}) {
-    this.#target =
-      (typeof target === "string" ? document.querySelector(target) : target) ??
-      null;
-    this.preventDefault = preventDefault ?? "action";
-    this.inputMap = inputMap ?? new InputMap();
+    this.#target = ((value) => {
+      if (value == null) return null;
+      if (value instanceof Element) return value;
+      if (typeof value !== "string")
+        throw new TypeError("target must be a string or HTMLElement");
+      const target = document.querySelector(value);
+      if (target == null)
+        throw new Error("no element found for selector: " + value);
+      return target;
+    })(target);
+
+    this.#preventDefault = ((value) => {
+      if (typeof value === "undefined") return "action";
+      if (typeof value !== "string")
+        throw new TypeError("preventDefault must be a string");
+      if (!preventDefaultValues.has(value))
+        throw new Error("invalid preventDefault value: " + value);
+      return value;
+    })(preventDefault);
+
+    this.#inputMap = ((value) => {
+      if (inputMap == null) return new InputMap();
+      if (value instanceof InputMap) return inputMap;
+      throw new TypeError("inputMap must be an InputMap");
+    })(inputMap);
+
     {
       /** @type {*} */
       const state = {};
