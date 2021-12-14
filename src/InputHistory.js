@@ -1,4 +1,4 @@
-import { getNow } from "./util";
+import { getNow } from "./util/index.js";
 
 /**
  * @typedef BinaryInput
@@ -42,7 +42,7 @@ class BinaryInputHistory {
     this.#history.unshift({ state, start: now });
     while (
       this.#history.length > 1 &&
-      this.#history[this.#history.length - 2].start + maximumHistoryLength < now
+      this.#history[this.#history.length - 1].start + maximumHistoryLength < now
     ) {
       this.#history.pop();
     }

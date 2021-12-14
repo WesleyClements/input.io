@@ -1,4 +1,4 @@
-import { Keys, MouseButtons } from "./util";
+import { Keys, MouseButtons } from "./util/index.js";
 
 /**
  * @typedef InputMapping
@@ -99,12 +99,12 @@ class InputMap {
   [getActions](keyCodes, mouseButtonCodes) {
     const results = new Set();
     keyCodes?.forEach((key) =>
-      InputMap.prototype.#keyToActions
+      this.#keyToActions
         .get(key)
         ?.forEach((action) => results.add(action))
     );
     mouseButtonCodes?.forEach((mouseButton) =>
-      InputMap.prototype.#mouseButtonToActions
+      this.#mouseButtonToActions
         .get(mouseButton)
         ?.forEach((action) => results.add(action))
     );
@@ -117,7 +117,7 @@ class InputMap {
    * @returns {boolean}
    */
   [keyHasAction](keyCode) {
-    return !!InputMap.prototype.#keyToActions.get(keyCode)?.size;
+    return !!this.#keyToActions.get(keyCode)?.size;
   }
 
   /**
@@ -126,7 +126,7 @@ class InputMap {
    * @returns {boolean}
    */
   [buttonHasAction](buttonCode) {
-    return !!InputMap.prototype.#mouseButtonToActions.get(buttonCode)?.size;
+    return !!this.#mouseButtonToActions.get(buttonCode)?.size;
   }
 
   /**
