@@ -1,13 +1,24 @@
 if (typeof window === "undefined")
   throw new Error("input.io only works in the browser");
 
-import InputMap, { keyHasAction, buttonHasAction } from "./InputMap";
+import InputMap, {
+  keyHasAction,
+  buttonHasAction,
+  getActions
+} from "./InputMap.js";
+import InputHistory from "./InputHistory.js";
+import { MouseButtons } from "./util/index.js";
 
 /**
  * @readonly
  * @enum {string}
  */
-const preventDefaultValues = new Set(["all", "action", "none"]);
+const preventDefaultValues = new Set(["all", "actions", "none"]);
+/**
+ * @readonly
+ * @enum {string}
+ */
+const mouseCoordinatesValues = new Set(["all", "actions", "none"]);
 
 /**
  * Manages inputs
@@ -20,11 +31,16 @@ class InputIO {
 
   /** @type {Element | null} */
   #target;
-  /** @type {'all'|'action'|'none'} */
+  /** @type {'all'|'actions'|'none'} */
   #preventDefault;
+  /** @type {'default'|'standard'|'inverted-standard'|'inverted-default'} */
+  #mouseCoordinates;
 
   /** @type {InputMap} */
   #inputMap;
+
+  /** @type {InputHistory} */
+  #inputHistory;
 
   /** @type {function} */
   #cleanup;
@@ -32,11 +48,12 @@ class InputIO {
   /**
    * @param {Object} [options={}] - InputIO options.
    * @param {Element|string} [options.target] - An {@link https://developer.mozilla.org/en-US/docs/Web/API/Element|Element} or css selector to an Element to listen for inputs on.
-   * @param {'all'|'action'|'none'} [options.preventDefault="action"] -
+   * @param {'all'|'actions'|'none'} [options.preventDefault="actions"] -
+   * @param {'default'|'standard'|'inverted-standard'|'inverted-default'} [options.mouseCoordinates="default"] -
    * @param {InputMap} [options.inputMap] -
    * Determines which input events will have preventDefault called on them
    */
-  constructor({ target, preventDefault, inputMap } = {}) {
+  constructor({ target, preventDefault, mouseCoordinates, inputMap } = {}) {
     this.#target = ((value) => {
       if (value == null) return null;
       if (value instanceof Element) return value;
@@ -49,7 +66,7 @@ class InputIO {
     })(target);
 
     this.#preventDefault = ((value) => {
-      if (typeof value === "undefined") return "action";
+      if (typeof value === "undefined") return "actions";
       if (typeof value !== "string")
         throw new TypeError("preventDefault must be a string");
       if (!preventDefaultValues.has(value))
@@ -57,71 +74,116 @@ class InputIO {
       return value;
     })(preventDefault);
 
+    this.#mouseCoordinates = ((value) => {
+      if (typeof value === "undefined") return "default";
+      if (typeof value !== "string")
+        throw new TypeError("mouseCoordinates must be a string");
+      if (!mouseCoordinatesValues.has(value))
+        throw new Error("invalid mouseCoordinates value: " + value);
+      return value;
+    })(mouseCoordinates);
+
     this.#inputMap = ((value) => {
       if (inputMap == null) return new InputMap();
       if (value instanceof InputMap) return inputMap;
       throw new TypeError("inputMap must be an InputMap");
     })(inputMap);
 
+    this.#inputHistory = new InputHistory();
+
     {
-      /** @type {*} */
-      const state = {};
+      /** @param {boolean} hasAction */
+      const shouldPreventDefault = (hasAction) => {
+        if (this.#preventDefault === "all") return true;
+        return this.#preventDefault === "actions" && hasAction;
+      };
+
       /** @param {KeyboardEvent} e */
       const onKeyDown = (e) => {
-        state.newInputFrame.setKeyState(e.code, true);
-        switch (this.#preventDefault) {
-          case "action":
-            if (!this.#inputMap[keyHasAction](e.code)) return;
-          case "all":
-            e.preventDefault();
-        }
+        this.#inputHistory.getKeyHistory(e.code).update({ state: true });
+        this.#inputMap[getActions]([e.code])
+          .forEach((action) =>
+            this.#inputHistory
+              .getActionHistory(action)
+              .update({ input: e.code, state: true })
+          );
+        if (shouldPreventDefault(this.#inputMap[keyHasAction](e.code))) e.preventDefault();
       };
       /** @param {KeyboardEvent} e */
       const onKeyUp = (e) => {
-        state.newInputFrame.setKeyState(e.code, false);
-        switch (this.#preventDefault) {
-          case "action":
-            if (!this.#inputMap[keyHasAction](e.code)) return;
-          case "all":
-            e.preventDefault();
-        }
+        this.#inputHistory.getKeyHistory(e.code).update({ state: false });
+        this.#inputMap[getActions]([e.code])
+          .forEach((action) =>
+            this.#inputHistory
+              .getActionHistory(action)
+              .update({ input: e.code, state: false })
+          );
+        if (shouldPreventDefault(this.#inputMap[keyHasAction](e.code))) e.preventDefault();
       };
       /** @param {MouseEvent} e */
       const onMouseDown = (e) => {
-        state.newInputFrame.setMouseButtonState(e.button, true);
-        switch (this.#preventDefault) {
-          case "action":
-            if (!this.#inputMap[buttonHasAction](e.button)) return;
-          case "all":
-            e.preventDefault();
-        }
+        const button = MouseButtons.getButtons(e.button)[0];
+        this.#inputHistory
+          .getMouseButtonHistory(button)
+          .update({ state: true });
+        this.#inputMap[getActions](undefined, [e.button])
+          .forEach((action) =>
+            this.#inputHistory
+              .getActionHistory(action)
+              .update({ input: button, state: true })
+          );
+        if (shouldPreventDefault(this.#inputMap[buttonHasAction](e.button))) e.preventDefault();
       };
       /** @param {MouseEvent} e */
       const onMouseUp = (e) => {
-        state.newInputFrame.setMouseButtonState(e.button, false);
-        switch (this.#preventDefault) {
-          case "action":
-            if (!this.#inputMap[buttonHasAction](e.button)) return;
-          case "all":
-            e.preventDefault();
-        }
+        const button = MouseButtons.getButtons(e.button)[0];
+        this.#inputHistory
+          .getMouseButtonHistory(button)
+          .update({ state: false });
+        this.#inputMap[getActions](undefined, [e.button])
+          .forEach((action) =>
+            this.#inputHistory
+              .getActionHistory(action)
+              .update({ input: button, state: false })
+          );
+        if (shouldPreventDefault(this.#inputMap[buttonHasAction](e.button))) e.preventDefault();
       };
       /** @param {MouseEvent} e */
       const onMouseMove = (e) => {
-        if (state.config.defaultMouseCoordinates) {
-          state.newInputFrame.setMousePosition(e.clientX, e.clientY);
-          state.newInputFrame.addMouseMovement(e.movementX, e.movementY);
-        } else {
-          state.newInputFrame.setMousePosition(
-            e.clientX,
-            innerHeight - e.clientY
-          );
-          state.newInputFrame.addMouseMovement(e.movementX, -e.movementY);
-        }
+        const dx = (() => {
+          switch (this.#mouseCoordinates) {
+          case "inverted-default":
+          case "inverted-standard":
+            return -e.movementX;
+          default:
+            return e.movementX;
+          }
+        })();
+        const dy = (() => {
+          switch (this.#mouseCoordinates) {
+          case "inverted-default":
+          case "standard":
+            return -e.movementY;
+          default:
+            return e.movementY;
+          }
+        })();
+        console.log(dx, dy);
+        // if (state.config.defaultMouseCoordinates) {
+        //   state.newInputFrame.setMousePosition(e.clientX, e.clientY);
+        //   state.newInputFrame.addMouseMovement(e.movementX, e.movementY);
+        // } else {
+        //   state.newInputFrame.setMousePosition(
+        //     e.clientX,
+        //     innerHeight - e.clientY
+        //   );
+        //   state.newInputFrame.addMouseMovement(e.movementX, -e.movementY);
+        // }
       };
-      /** @param {WheelEvent} e */
-      const onMouseWheel = (e) =>
-        state.newInputFrame.addMouseWheelMovement(-e.deltaY);
+      /** @param {WheelEvent} _e */
+      const onMouseWheel = (_e) => {
+        //state.newInputFrame.addMouseWheelMovement(-e.deltaY);
+      };
       /** @param {MouseEvent} _e */
       const onMouseEnter = (_e) => {
         console.log("mouse enter");
@@ -132,20 +194,20 @@ class InputIO {
       };
       /** @param {FocusEvent} _e */
       const onBlur = (_e) => {
-        state.newInputFrame.clearInputs();
+        //state.newInputFrame.clearInputs();
       };
       /** @param {FocusEvent} _e */
       const onFocus = (_e) => {
-        state.newInputFrame.clearInputs();
+        //state.newInputFrame.clearInputs();
       };
       const onPointerLockChange = () => {
         if (this.#target === null) throw Error("no element to lock on");
-        state.newInputFrame.setMousePointerLocked(
-          document.pointerLockElement === state.fullscreenLock
-        );
+        // state.newInputFrame.setMousePointerLocked(
+        //   document.pointerLockElement === state.fullscreenLock
+        // );
       };
       const onPointerLockError = () => {
-        state.newInputFrame.setMousePointerLocked(false);
+        //state.newInputFrame.setMousePointerLocked(false);
       };
       /** @type {*} */
       const target = this.#target ? this.#target : window;
@@ -189,9 +251,21 @@ class InputIO {
   set preventDefault(value) {
     if (typeof value !== "string")
       throw new TypeError("preventDefault must be a string");
-    if (!["all", "action", "none"].includes(value))
+    if (!preventDefaultValues.has(value))
       throw new Error("invalid preventDefault value: " + value);
     this.#preventDefault = value;
+  }
+
+  get mouseCoordinates() {
+    return this.#mouseCoordinates;
+  }
+
+  set mouseCoordinates(value) {
+    if (typeof value !== "string")
+      throw new TypeError("mouseCoordinates must be a string");
+    if (!mouseCoordinatesValues.has(value))
+      throw new Error("invalid mouseCoordinates value: " + value);
+    this.#mouseCoordinates = value;
   }
 
   get inputMap() {
